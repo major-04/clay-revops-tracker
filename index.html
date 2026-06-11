@@ -616,7 +616,10 @@
             const projects = Object.values(trackerData.projects);
             const totalProjects = projects.length;
             const shippedCount = projects.filter(p => p.answers.percent_complete === 100).length;
-            const const avgProgress = totalProjects > 0 ? Math.round(projects.reduce((sum, p) => sum + (parseInt(p.answers.percent_complete) || 0), 0) / totalProjects) : 0;
+            const avgProgress = totalProjects > 0 ? Math.round(projects.reduce((sum, p) => {
+    const val = p && p.answers ? (parseInt(p.answers.percent_complete) || 0) : 0;
+    return sum + val;
+}, 0) / totalProjects) : 0;
             let deltaStr = '—';
             if (trackerData.history && trackerData.history.length >= 2) {
                 const currentAvg = calculateAverageProgress(trackerData.history[trackerData.history.length - 1]);
