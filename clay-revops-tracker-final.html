@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clay RevOps Tracker — Team Dashboard</title>
+    <style>
+        :root {
+            --true-blue: #0062E3;
+            --moonshot: #0F1F2C;
+            --fry-sauce: #FF7F64;
+            --gold-medal: #FED141;
+            --sky: #8FCEEE;
+            --bg: #F5F7FA;
+            --border: #E0E6ED;
+            --text-dark: #1A1F2E;
+            --text-light: #626B7A;
+            color-scheme: light;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+            background: var(--bg);
+            color: var(--text-dark);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--moonshot);
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-tile {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--true-blue);
+            line-height: 1;
+        }
+
+        .stat-delta {
+            font-size: 12px;
+            margin-top: 8px;
+            color: var(--text-light);
+        }
+
+        .stat-delta.positive {
+            color: #10B981;
+        }
+
+        .stat-delta.negative {
+            color: var(--fry-sauce);
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--moonshot);
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--true-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052C3;
+            box-shadow: 0 4px 6px rgba(0, 98, 227, 0.2);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #F0F2F5;
+        }
+
+        .btn-success {
+            background: #10B981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .portfolio-table {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .priority-group {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .priority-group:last-child {
+            border-bottom: none;
+        }
+
+        .priority-header {
+            background: #FAFBFC;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .project-row {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 1.5fr 1fr 2fr;
+            gap: 12px;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .project-row:hover {
+            background: #F9FAFB;
+        }
+
+        .project-row:last-child {
+            border-bottom: none;
+        }
+
+        .project-name {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .project-name.shipped {
+            color: var(--fry-sauce);
+        }
+
+        .project-name.shipped::before {
+            content: "✓ ";
+            margin-right: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .badge.p0 {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .badge.p1 {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge.p2 {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .badge.p3 {
+            background: #E0E7FF;
+            color: #3730A3;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--true-blue);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.shipped {
+            background: var(--fry-sauce);
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 1.5fr 1fr 2fr;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #FAFBFC;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.2s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: var(--moonshot);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text-dark);
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--true-blue);
+            box-shadow: 0 0 0 3px rgba(0, 98, 227, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .updates-section {
+            background: #FAFBFC;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .updates-section h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .update-item {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--true-blue);
+        }
+
+        .update-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .update-time {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .update-text {
+            font-size: 13px;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            padding: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .open-items {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .open-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .open-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .open-item-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .blocker {
+            background: #FEE2E2;
+            border-left: 3px solid var(--fry-sauce);
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #991B1B;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        #importFile {
+            display: none;
+        }
+
+        @media (max-width: 1200px) {
+            .table-header,
+            .project-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Clay RevOps Tracker</h1>
+        <p>Team dashboard — click projects to edit. Export/import data below.</p>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn btn-primary" onclick="exportData()">📥 Export to JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import from JSON</button>
+        <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+        <button class="btn btn-primary" onclick="openCreateModal()">+ New Project</button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-tile">
+            <div class="stat-label">Total Projects</div>
+            <div class="stat-value" id="totalProjects">0</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">Shipped</div>
+            <div class="stat-value" id="shippedCount">0</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">Avg Progress</div>
+            <div class="stat-value" id="avgProgress">0%</div>
+            <div class="stat-delta" id="deltaPercent"></div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">Last Update</div>
+            <div style="font-size: 14px; color: var(--text-light); font-weight: 500;" id="lastUpdate">—</div>
+        </div>
+    </div>
+
+    <!-- Portfolio Table -->
+    <div class="section">
+        <div class="section-title">📊 Project Portfolio</div>
+        <div class="portfolio-table">
+            <div class="table-header">
+                <div>Project</div>
+                <div>Priority</div>
+                <div>Progress</div>
+                <div>Δ</div>
+                <div>Impact</div>
+                <div>Destination</div>
+                <div>Time Est.</div>
+                <div>Latest Update</div>
+            </div>
+            <div id="portfolioContent"></div>
+        </div>
+    </div>
+
+    <!-- Open Items Panel -->
+    <div class="section">
+        <div class="section-title">⚠️ Open Items & Blockers</div>
+        <div id="openItemsContent"></div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Project Details</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Goal</label>
+                    <div style="padding: 10px 12px; background: var(--bg); border-radius: 6px; font-size: 13px; color: var(--text-dark); line-height: 1.5;" id="modalGoal"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Done So Far</label>
+                    <textarea class="form-textarea" id="modalDoneSoFar"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Remaining</label>
+                    <textarea class="form-textarea" id="modalRemaining"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Blockers</label>
+                    <textarea class="form-textarea" id="modalBlockers"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Progress (%)</label>
+                    <input type="number" class="form-input" id="modalProgress" min="0" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Time Estimate</label>
+                    <input type="text" class="form-input" id="modalTimeEstimate">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Rep Impact</label>
+                    <textarea class="form-textarea" id="modalRepImpact"></textarea>
+                </div>
+
+                <div class="updates-section">
+                    <h4>Updates</h4>
+                    <div id="modalUpdates" style="margin-bottom: 12px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newUpdateText" class="form-input" placeholder="Add a new update..." style="flex: 1;">
+                        <button class="btn btn-primary" onclick="addUpdate()" style="white-space: nowrap;">Add Update</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" onclick="saveProject()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Project</h2>
+                <button class="modal-close" onclick="closeCreateModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Project Name *</label>
+                    <input type="text" class="form-input" id="createName" placeholder="e.g., New Workflow Integration">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Goal *</label>
+                    <textarea class="form-textarea" id="createGoal" placeholder="What is the goal of this project?"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Priority *</label>
+                        <select class="form-input" id="createPriority" style="cursor: pointer;">
+                            <option value="P0 — do now">P0 — do now</option>
+                            <option value="P1 — this week">P1 — this week</option>
+                            <option value="P2 — this month">P2 — this month</option>
+                            <option value="P3 — when capacity allows">P3 — when capacity allows</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Impact Level *</label>
+                        <select class="form-input" id="createImpact" style="cursor: pointer;">
+                            <option value="⭐ High — material lift to pipeline / efficiency">⭐ High</option>
+                            <option value="✅ Medium — meaningful but not urgent">✅ Medium</option>
+                            <option value="🌱 Low — nice-to-have / exploratory">🌱 Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Progress % (0-100)</label>
+                        <input type="number" class="form-input" id="createProgress" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Time Estimate</label>
+                        <input type="text" class="form-input" id="createTimeEstimate" placeholder="e.g., 1 week">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Destination</label>
+                    <input type="text" class="form-input" id="createDestination" placeholder="e.g., Salesforce, Slack">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Done So Far</label>
+                    <textarea class="form-textarea" id="createDoneSoFar" placeholder="What has been completed..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Remaining</label>
+                    <textarea class="form-textarea" id="createRemaining" placeholder="What work is left..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Blockers</label>
+                    <textarea class="form-textarea" id="createBlockers" placeholder="Any blockers or issues..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Rep Impact</label>
+                    <textarea class="form-textarea" id="createRepImpact" placeholder="How this affects reps..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNewProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trackerData = null;
+        let currentProjectId = null;
+
+        function loadTrackerData() {
+            const savedData = localStorage.getItem('trackerData');
+            if (savedData) {
+                trackerData = JSON.parse(savedData);
+            } else {
+                trackerData = {
+                    exported_at: new Date().toISOString(),
+                    projects: {},
+                    history: []
+                };
+            }
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            const projects = Object.values(trackerData.projects);
+            const totalProjects = projects.length;
+            const shippedCount = projects.filter(p => p.answers.percent_complete === 100).length;
+            const avgProgress = totalProjects > 0 ? Math.round(projects.reduce((sum, p) => sum + p.answers.percent_complete, 0) / totalProjects) : 0;
+
+            let deltaStr = '—';
+            if (trackerData.history && trackerData.history.length >= 2) {
+                const currentAvg = calculateAverageProgress(trackerData.history[trackerData.history.length - 1]);
+                const prevAvg = calculateAverageProgress(trackerData.history[trackerData.history.length - 2]);
+                const delta = currentAvg - prevAvg;
+
+                if (delta > 0) {
+                    deltaStr = `<span class="stat-delta positive">+${Math.round(delta)}%</span>`;
+                } else if (delta < 0) {
+                    deltaStr = `<span class="stat-delta negative">${Math.round(delta)}%</span>`;
+                } else {
+                    deltaStr = `<span class="stat-delta neutral">—</span>`;
+                }
+            }
+
+            document.getElementById('totalProjects').textContent = totalProjects;
+            document.getElementById('shippedCount').textContent = shippedCount;
+            document.getElementById('avgProgress').textContent = avgProgress + '%';
+            document.getElementById('deltaPercent').innerHTML = deltaStr;
+            document.getElementById('lastUpdate').textContent = new Date(trackerData.exported_at).toLocaleDateString();
+
+            renderPortfolioTable();
+            renderOpenItems();
+        }
+
+        function calculateAverageProgress(snapshot) {
+            if (!snapshot.completion_by_project) return 0;
+            const values = Object.values(snapshot.completion_by_project);
+            return values.length > 0 ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
+        }
+
+        function renderPortfolioTable() {
+            const content = document.getElementById('portfolioContent');
+            const projects = Object.entries(trackerData.projects);
+
+            if (projects.length === 0) {
+                content.innerHTML = '<div class="empty-state"><p>No projects yet. Click "+ New Project" to get started.</p></div>';
+                return;
+            }
+
+            const priorities = ['P0 — do now', 'P1 — this week', 'P2 — this month', 'P3 — when capacity allows'];
+            let html = '';
+
+            priorities.forEach(priority => {
+                const projectsInPriority = projects.filter(([, p]) => p.answers.priority_rank === priority);
+                if (projectsInPriority.length === 0) return;
+
+                html += `<div class="priority-group"><div class="priority-header">${priority}</div>`;
+
+                projectsInPriority.forEach(([id, project]) => {
+                    const delta = calculateProjectDelta(id);
+                    const deltaClass = delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral';
+                    const deltaStr = delta > 0 ? `+${delta}%` : delta < 0 ? `${delta}%` : '—';
+                    const isShipped = project.answers.percent_complete === 100;
+                    const progressClass = isShipped ? 'shipped' : '';
+                    const latestUpdate = project.updates && project.updates.length > 0
+                        ? project.updates[project.updates.length - 1].text.substring(0, 40) + (project.updates[project.updates.length - 1].text.length > 40 ? '…' : '')
+                        : '—';
+
+                    html += `
+                        <div class="project-row" onclick="openProjectModal('${id}')">
+                            <div class="project-name ${isShipped ? 'shipped' : ''}">${project.name}</div>
+                            <div><span class="badge ${priority.split(' ')[0].toLowerCase()}">${priority.split(' ')[0]}</span></div>
+                            <div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill ${progressClass}" style="width: ${project.answers.percent_complete}%"></div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-light); margin-top: 4px;">${project.answers.percent_complete}%</div>
+                            </div>
+                            <div style="font-size: 12px; font-weight: 500;" class="${deltaClass}">${deltaStr}</div>
+                            <div>${project.answers.impact_level}</div>
+                            <div style="font-size: 13px; color: var(--text-light);">${project.answers.destination || '—'}</div>
+                            <div style="font-size: 13px; color: var(--text-light);">${isShipped ? '—' : project.answers.time_estimate}</div>
+                            <div style="font-size: 12px; color: var(--text-light);">${latestUpdate}</div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            });
+
+            content.innerHTML = html;
+        }
+
+        function calculateProjectDelta(projectId) {
+            if (!trackerData.history || trackerData.history.length < 2) return 0;
+            const current = trackerData.projects[projectId].answers.percent_complete;
+            const prev = trackerData.history[trackerData.history.length - 2].completion_by_project[projectId];
+            if (prev === undefined) return 0;
+            return current - prev;
+        }
+
+        function renderOpenItems() {
+            const content = document.getElementById('openItemsContent');
+            const openProjects = Object.entries(trackerData.projects).filter(([, p]) => p.answers.percent_complete < 100);
+
+            if (openProjects.length === 0) {
+                content.innerHTML = '<div class="empty-state"><p>All projects shipped! 🎉</p></div>';
+                return;
+            }
+
+            let html = '<div class="open-items">';
+
+            openProjects.forEach(([id, project]) => {
+                html += `<div class="open-item">
+                    <div class="open-item-name">${project.name}</div>
+                    ${project.answers.blockers ? `<div class="blocker">🚫 ${project.answers.blockers}</div>` : ''}
+                    <div style="margin-bottom: 8px;"><strong>Remaining:</strong> ${project.answers.remaining || '—'}</div>
+                    <div><strong>Rep Impact:</strong> ${project.answers.rep_impact || '—'}</div>
+                </div>`;
+            });
+
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function openProjectModal(projectId) {
+            currentProjectId = projectId;
+            const project = trackerData.projects[projectId];
+
+            document.getElementById('modalTitle').textContent = project.name;
+            document.getElementById('modalGoal').textContent = project.answers.goal || '—';
+            document.getElementById('modalDoneSoFar').value = project.answers.done_so_far || '';
+            document.getElementById('modalRemaining').value = project.answers.remaining || '';
+            document.getElementById('modalBlockers').value = project.answers.blockers || '';
+            document.getElementById('modalProgress').value = project.answers.percent_complete || 0;
+            document.getElementById('modalTimeEstimate').value = project.answers.time_estimate || '';
+            document.getElementById('modalRepImpact').value = project.answers.rep_impact || '';
+
+            renderUpdatesInModal(project);
+            document.getElementById('projectModal').classList.add('active');
+        }
+
+        function renderUpdatesInModal(project) {
+            const container = document.getElementById('modalUpdates');
+            if (!project.updates || project.updates.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-light); font-size: 12px;">No updates yet</div>';
+                return;
+            }
+
+            container.innerHTML = project.updates.map(update => `
+                <div class="update-item">
+                    <div class="update-time">${new Date(update.created_at).toLocaleString()}</div>
+                    <div class="update-text">${update.text}</div>
+                </div>
+            `).join('');
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').classList.remove('active');
+            currentProjectId = null;
+        }
+
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+        }
+
+        function addUpdate() {
+            const text = document.getElementById('newUpdateText').value.trim();
+            if (!text) return;
+
+            const project = trackerData.projects[currentProjectId];
+            if (!project.updates) project.updates = [];
+
+            project.updates.push({
+                id: `u_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                text: text,
+                created_at: new Date().toISOString()
+            });
+
+            document.getElementById('newUpdateText').value = '';
+            renderUpdatesInModal(project);
+            saveToLocalStorage();
+        }
+
+        function saveProject() {
+            const project = trackerData.projects[currentProjectId];
+
+            project.answers.done_so_far = document.getElementById('modalDoneSoFar').value;
+            project.answers.remaining = document.getElementById('modalRemaining').value;
+            project.answers.blockers = document.getElementById('modalBlockers').value || null;
+            project.answers.percent_complete = parseInt(document.getElementById('modalProgress').value) || 0;
+            project.answers.time_estimate = document.getElementById('modalTimeEstimate').value;
+            project.answers.rep_impact = document.getElementById('modalRepImpact').value;
+            project.updated = new Date().toISOString();
+
+            trackerData.exported_at = new Date().toISOString();
+
+            saveToLocalStorage();
+            renderDashboard();
+            closeModal();
+        }
+
+        function saveNewProject() {
+            const name = document.getElementById('createName').value.trim();
+            if (!name) {
+                alert('Project name is required');
+                return;
+            }
+
+            const goal = document.getElementById('createGoal').value.trim();
+            if (!goal) {
+                alert('Goal is required');
+                return;
+            }
+
+            const projectId = 'project_' + name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_' + Date.now();
+
+            const newProject = {
+                id: projectId,
+                name: name,
+                answers: {
+                    goal: goal,
+                    percent_complete: parseInt(document.getElementById('createProgress').value) || 0,
+                    done_so_far: document.getElementById('createDoneSoFar').value || null,
+                    remaining: document.getElementById('createRemaining').value || null,
+                    blockers: document.getElementById('createBlockers').value || null,
+                    time_estimate: document.getElementById('createTimeEstimate').value || null,
+                    destination: document.getElementById('createDestination').value || null,
+                    rep_impact: document.getElementById('createRepImpact').value || null,
+                    impact_level: document.getElementById('createImpact').value,
+                    priority_rank: document.getElementById('createPriority').value
+                },
+                updated: new Date().toISOString(),
+                updates: []
+            };
+
+            trackerData.projects[projectId] = newProject;
+            trackerData.exported_at = new Date().toISOString();
+
+            saveToLocalStorage();
+            renderDashboard();
+            closeCreateModal();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('trackerData', JSON.stringify(trackerData));
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(trackerData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    trackerData = data;
+                    saveToLocalStorage();
+                    renderDashboard();
+                    alert('Data imported successfully!');
+                } catch (error) {
+                    alert('Error importing file. Make sure it\'s valid JSON.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        document.getElementById('projectModal').addEventListener('click', function(event) {
+            if (event.target === this) closeModal();
+        });
+
+        document.getElementById('createModal').addEventListener('click', function(event) {
+            if (event.target === this) closeCreateModal();
+        });
+
+        loadTrackerData();
+    </script>
+</body>
+</html>
